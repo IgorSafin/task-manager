@@ -924,6 +924,32 @@ registerManifest();
 <!-- TOAST -->
 <div class="toast" id="toast"></div>
 
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+  import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+  const firebaseConfig = {
+    apiKey: "AIzaSyCGaL-cU0o7HFzLAlng2oC5eK53clYyQqY",
+    authDomain: "task-manager-18763.firebaseapp.com",
+    projectId: "task-manager-18763",
+    storageBucket: "task-manager-18763.firebasestorage.app",
+    messagingSenderId: "693384414058",
+    appId: "1:693384414058:web:e8cc3560cfb1077b1d5b13"
+  };
+
+  const app = initializeApp(firebaseConfig);
+  const db = getFirestore(app);
+
+  // Expose to global scope for use in non-module scripts
+  window._fbDb = db;
+  window._fbDoc = doc;
+  window._fbSetDoc = setDoc;
+  window._fbGetDoc = getDoc;
+  window._fbReady = true;
+  window.dispatchEvent(new Event('firebase-ready'));
+</script>
+
 <script src="https://accounts.google.com/gsi/client" async></script>
 <script>
 const CLIENT_ID = '758639422195-emkupm2ktsrh4mpefdnkanfn5nhfb9ec.apps.googleusercontent.com';
@@ -1334,18 +1360,64 @@ function toggleTheme() {
 function init() {
   initTheme();
   initDragSystem();
-  const hash = location.hash.slice(1);
-  if (hash.startsWith('view=')) {
+  if (window.location.hash.startsWith('#share=')) {
+    // New short Firebase share link
+    const shareId = window.location.hash.substring(7);
+    const loadFirebaseShare = async () => {
+      if (!window._fbReady) {
+        await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
+      }
+      try {
+        const docRef = window._fbDoc(window._fbDb, 'shares', shareId);
+        const snap = await window._fbGetDoc(docRef);
+        if (!snap.exists()) throw new Error('Share not found');
+        const data = snap.data();
+        if (!data || !Array.isArray(data.tasks)) throw new Error('tasks array missing');
+        state.tasks = data.tasks;
+        state.nextId = state.tasks.reduce((m,tt) => Math.max(m,tt.id), 0) + 1;
+        isViewMode = true;
+        const banner = document.getElementById('viewmode-banner');
+        if (banner) banner.classList.add('visible');
+        const btnShare = document.getElementById('btn-share');
+        if (btnShare) btnShare.style.display = 'none';
+        const driveBtnEl = document.getElementById('drive-btn');
+        if (driveBtnEl) driveBtnEl.style.display = 'none';
+        const appEl = document.getElementById('app');
+        if (appEl) appEl.dataset.viewmode = 'true';
+        render();
+      } catch(e) {
+        alert('Ошибка загрузки ссылки: ' + e.message);
+        console.error('Детали:', e);
+        loadLocal();
+        render();
+      }
+    };
+    loadFirebaseShare();
+  } else if (window.location.hash.startsWith('#view=')) {
+    // Legacy long share link — still supported
     try {
-      const data = JSON.parse(decodeURIComponent(escape(atob(hash.slice(5)))));
-      state.tasks = data.tasks || [];
+      let encoded = window.location.hash.substring(6);
+      encoded = encoded.replace(/-/g, '+').replace(/_/g, '/');
+      while (encoded.length % 4) { encoded += '='; }
+      const decoded = decodeURIComponent(atob(encoded));
+      const data = JSON.parse(decoded);
+      if (!data || !Array.isArray(data.tasks)) throw new Error('tasks array missing');
+      state.tasks = data.tasks;
       state.nextId = state.tasks.reduce((m,t) => Math.max(m,t.id), 0) + 1;
       isViewMode = true;
-      document.getElementById('viewmode-banner').classList.add('visible');
-      document.getElementById('btn-share').style.display = 'none';
-      document.getElementById('drive-btn').style.display = 'none';
-      document.getElementById('app').dataset.viewmode = 'true';
-    } catch(e) { loadLocal(); }
+      const banner = document.getElementById('viewmode-banner');
+      if (banner) banner.classList.add('visible');
+      const btnShare = document.getElementById('btn-share');
+      if (btnShare) btnShare.style.display = 'none';
+      const driveBtnEl = document.getElementById('drive-btn');
+      if (driveBtnEl) driveBtnEl.style.display = 'none';
+      const appEl = document.getElementById('app');
+      if (appEl) appEl.dataset.viewmode = 'true';
+    } catch(e) {
+      alert('Ошибка загрузки ссылки: ' + e.message);
+      console.error('Детали:', e);
+      loadLocal();
+    }
   } else {
     loadLocal();
     restoreDriveToken();
@@ -1354,7 +1426,8 @@ function init() {
   // Set initial tab directly without animation
   state.activeTab = 'current';
   document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === 'current'));
-  document.getElementById('sec-current').classList.add('active');
+  const secCurrent = document.getElementById('sec-current');
+  if (secCurrent) secCurrent.classList.add('active');
   render();
 }
 
@@ -1730,10 +1803,12 @@ function render() {
     const tasks = state.tasks.filter(tt => tt.section === sec);
     const list = document.getElementById('list-'+sec);
     const empty = document.getElementById('empty-'+sec);
+    const count = document.getElementById('count-'+sec);
+    if (!list || !empty || !count) return;
     list.innerHTML = '';
     tasks.forEach(tt => list.appendChild(buildCard(tt)));
     empty.style.display = tasks.length === 0 ? 'flex' : 'none';
-    document.getElementById('count-'+sec).textContent = tasks.length;
+    count.textContent = tasks.length;
   });
 }
 
@@ -1885,13 +1960,41 @@ function addTask() {
   }, 80);
 }
 
-function openShare() {
-  const encoded = btoa(unescape(encodeURIComponent(JSON.stringify({ tasks: state.tasks }))));
-  const url = location.origin + location.pathname + '#view=' + encoded;
-  document.getElementById('share-url-text').textContent = url;
-  document.getElementById('share-modal').classList.add('open');
+function generateShareId() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
+  let id = '';
+  for (let i = 0; i < 8; i++) id += chars[Math.floor(Math.random() * chars.length)];
+  return id;
+}
+
+async function openShare() {
+  const urlEl = document.getElementById('share-url-text');
   const btn = document.getElementById('copy-btn');
   btn.textContent = t('copy'); btn.classList.remove('copied');
+  urlEl.textContent = lang === 'zh' ? '正在生成链接...' : 'Generating link...';
+  document.getElementById('share-modal').classList.add('open');
+
+  // Wait for Firebase if not ready yet
+  if (!window._fbReady) {
+    await new Promise(resolve => window.addEventListener('firebase-ready', resolve, { once: true }));
+  }
+
+  try {
+    const shareId = generateShareId();
+    const shareData = { tasks: state.tasks, createdAt: Date.now() };
+    const docRef = window._fbDoc(window._fbDb, 'shares', shareId);
+    await window._fbSetDoc(docRef, shareData);
+    const url = location.origin + location.pathname + '#share=' + shareId;
+    urlEl.textContent = url;
+  } catch (e) {
+    console.error('Firebase share error:', e);
+    // Fallback to old URL method if Firebase fails
+    const json = JSON.stringify({ tasks: state.tasks });
+    const encoded = btoa(encodeURIComponent(json)).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const url = location.origin + location.pathname + '#view=' + encoded;
+    urlEl.textContent = url;
+    toast('Firebase error — using long link as fallback');
+  }
 }
 
 function copyLink() {
@@ -1916,7 +2019,7 @@ function toast(msg) {
   toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
 
-init();
+document.addEventListener('DOMContentLoaded', init);
 </script>
 </body>
 </html>
