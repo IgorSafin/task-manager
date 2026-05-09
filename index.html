@@ -56,11 +56,11 @@ registerManifest();
   @import url('https://fonts.googleapis.com/css2?family=Google+Sans:wght@400;500;700&family=Google+Sans+Display:wght@400;500;700&display=swap');
 
   :root {
-    --bg: #111111;
-    --bg2: #1c1c1e;
-    --bg3: #2c2c2e;
+    --bg: transparent;
+    --bg2: rgba(28,28,30,0.55);
+    --bg3: rgba(44,44,46,0.55);
     --border: rgba(255,255,255,0.09);
-    --border2: rgba(255,255,255,0.18);
+    --border2: rgba(255,255,255,0.22);
     --text: #f2f2f7;
     --text2: #8e8e93;
     --text3: #48484a;
@@ -76,14 +76,20 @@ registerManifest();
     --tab-h: 72px;
     --header-h: 60px;
     --transition: 0.2s ease;
+    /* Glass surface */
+    --glass-bg: rgba(255,255,255,0.08);
+    --glass-bg-hover: rgba(255,255,255,0.14);
+    --glass-border: rgba(255,255,255,0.18);
+    --glass-blur: blur(18px);
+    --glass-shadow: 0 4px 24px rgba(0,0,0,0.22), inset 0 1px 0 rgba(255,255,255,0.1);
   }
 
   [data-theme="light"] {
-    --bg: #f2f2f7;
-    --bg2: #ffffff;
-    --bg3: #e5e5ea;
+    --bg: transparent;
+    --bg2: rgba(255,255,255,0.45);
+    --bg3: rgba(229,229,234,0.5);
     --border: rgba(0,0,0,0.08);
-    --border2: rgba(0,0,0,0.16);
+    --border2: rgba(0,0,0,0.18);
     --text: #1c1c1e;
     --text2: #6c6c70;
     --text3: #aeaeb2;
@@ -92,6 +98,10 @@ registerManifest();
     --accent-finished: #4a6d95;
     --accent-archive: #6a4f80;
     --danger: #a03830;
+    --glass-bg: rgba(255,255,255,0.32);
+    --glass-bg-hover: rgba(255,255,255,0.52);
+    --glass-border: rgba(255,255,255,0.6);
+    --glass-shadow: 0 4px 24px rgba(80,100,140,0.12), inset 0 1px 0 rgba(255,255,255,0.7);
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
@@ -101,10 +111,18 @@ registerManifest();
     overflow: hidden;
     font-family: var(--font);
     font-size: var(--font-size);
-    background: var(--bg);
+    background: #1a1e2e;
     color: var(--text);
     overscroll-behavior: none;
-    transition: background var(--transition), color var(--transition);
+    transition: background 0.8s ease, color var(--transition);
+  }
+  body[data-theme="light"] { background: #b8c2ce; }
+  body[data-theme="dark"]  { background: #1a1e2e; }
+
+  /* Animated SVG orb canvas */
+  #orb-scene {
+    position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+    pointer-events: none; z-index: 0;
   }
 
   .app {
@@ -114,6 +132,7 @@ registerManifest();
     max-width: 680px;
     margin: 0 auto;
     position: relative;
+    z-index: 1;
   }
 
   /* HEADER */
@@ -123,8 +142,10 @@ registerManifest();
     align-items: center;
     justify-content: space-between;
     padding: 0 16px;
-    border-bottom: 0.5px solid var(--border);
-    background: var(--bg);
+    border-bottom: 0.5px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     flex-shrink: 0;
     z-index: 10;
     gap: 8px;
@@ -165,16 +186,19 @@ registerManifest();
   /* DOTS MENU BUTTON */
   .dots-btn {
     width: 36px; height: 36px;
-    border-radius: 6px;
-    background: var(--bg3);
-    border: 0.5px solid var(--border);
+    border-radius: 10px;
+    background: var(--glass-bg);
+    border: 0.5px solid var(--glass-border);
     color: var(--text2);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.15s;
     flex-shrink: 0;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
   }
-  .dots-btn:hover { border-color: var(--border2); color: var(--text); }
+  .dots-btn:hover { background: var(--glass-bg-hover); border-color: var(--glass-border); color: var(--text); }
   .dots-btn svg { width: 16px; height: 16px; pointer-events: none; }
 
   /* DROPDOWN MENU */
@@ -182,13 +206,15 @@ registerManifest();
     position: absolute;
     top: calc(var(--header-h) - 6px);
     right: 12px;
-    background: var(--bg2);
-    border: 0.5px solid var(--border2);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 0.5px solid var(--glass-border);
     border-radius: 16px;
     padding: 8px;
     z-index: 200;
     min-width: 220px;
-    box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
     display: none;
     flex-direction: column;
     gap: 2px;
@@ -205,7 +231,7 @@ registerManifest();
     align-items: center;
     gap: 12px;
     padding: 11px 14px;
-    border-radius: 6px;
+    border-radius: 10px;
     font-size: 15px;
     font-weight: 500;
     font-family: var(--font);
@@ -217,10 +243,10 @@ registerManifest();
     width: 100%;
     text-align: left;
   }
-  .menu-item:hover { background: var(--bg3); }
+  .menu-item:hover { background: var(--glass-bg-hover); }
   .menu-item:active { transform: scale(0.98); }
   .menu-item svg { width: 18px; height: 18px; flex-shrink: 0; color: var(--text2); }
-  .menu-item .menu-icon { width: 32px; height: 32px; border-radius: 6px; background: var(--bg3); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .menu-item .menu-icon { width: 32px; height: 32px; border-radius: 8px; background: var(--glass-bg); border: 0.5px solid var(--glass-border); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
   .menu-item .menu-icon svg { width: 16px; height: 16px; }
   #drive-menu-item .menu-icon svg { width: 21px; height: 21px; }
   .menu-separator { height: 0.5px; background: var(--border); margin: 4px 6px; }
@@ -248,17 +274,20 @@ registerManifest();
   .header-btn.drive-connected { border-color: var(--accent-current); color: var(--accent-current); }
 
   .theme-btn {
-    width: 34px; height: 34px;
-    border-radius: 50%;
-    background: var(--bg3);
-    border: 0.5px solid var(--border);
+    width: 36px; height: 36px;
+    border-radius: 10px;
+    background: var(--glass-bg);
+    border: 0.5px solid var(--glass-border);
     color: var(--text2);
     cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.15s;
     flex-shrink: 0;
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    box-shadow: var(--glass-shadow);
   }
-  .theme-btn:hover { border-color: var(--border2); color: var(--text); }
+  .theme-btn:hover { background: var(--glass-bg-hover); color: var(--text); }
   .theme-btn svg { width: 16px; height: 16px; }
 
   .lang-btn {
@@ -282,8 +311,10 @@ registerManifest();
     align-items: center;
     justify-content: space-between;
     padding: 7px 16px;
-    background: var(--bg3);
-    border-bottom: 0.5px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 0.5px solid var(--glass-border);
     font-size: 13px;
     font-family: var(--font);
     color: var(--text2);
@@ -298,17 +329,20 @@ registerManifest();
   @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.3} }
   .drive-sync-btn {
     font-size: 13px; font-family: var(--font); font-weight: 500;
-    background: transparent; border: 0.5px solid var(--border);
-    border-radius: 6px; padding: 3px 10px; color: var(--text2);
+    background: var(--glass-bg); border: 0.5px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 8px; padding: 3px 10px; color: var(--text2);
     cursor: pointer; transition: all 0.15s;
   }
-  .drive-sync-btn:hover { border-color: var(--border2); color: var(--text); }
+  .drive-sync-btn:hover { background: var(--glass-bg-hover); color: var(--text); }
 
   /* VIEW MODE BANNER */
   .viewmode-banner {
     display: none;
-    background: var(--bg3);
-    border-bottom: 0.5px solid var(--border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border-bottom: 0.5px solid var(--glass-border);
     padding: 9px 16px;
     font-size: 14px;
     font-weight: 500;
@@ -321,8 +355,10 @@ registerManifest();
   .tabs {
     display: flex;
     height: var(--tab-h);
-    border-bottom: 0.5px solid var(--border);
-    background: var(--bg);
+    border-bottom: 0.5px solid var(--glass-border);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
     flex-shrink: 0;
     overflow-x: auto;
     scrollbar-width: none;
@@ -475,7 +511,7 @@ registerManifest();
   .section-head {
     display: flex; align-items: center; gap: 9px;
     margin-bottom: 14px; padding-bottom: 13px;
-    border-bottom: 0.5px solid var(--border);
+    border-bottom: 0.5px solid var(--glass-border);
   }
   .section-head-dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
   .section-head-label {
@@ -488,9 +524,11 @@ registerManifest();
 
   /* TASK CARD */
   .task-card {
-    background: var(--bg2);
-    border: 0.5px solid var(--border);
-    border-radius: var(--radius);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 0.5px solid var(--glass-border);
+    border-radius: 14px;
     padding: 13px 14px;
     display: flex;
     align-items: stretch;
@@ -502,9 +540,9 @@ registerManifest();
                 opacity 0.3s cubic-bezier(.4,0,.2,1);
     animation: slideIn 0.22s cubic-bezier(.4,0,.2,1);
     touch-action: pan-y;
-    /* Spring transform — bouncy overshoot */
     transform: translateY(0px);
     will-change: transform;
+    box-shadow: var(--glass-shadow);
   }
   /* Cards being displaced animate with spring */
   .task-card.drag-displaced {
@@ -580,15 +618,18 @@ registerManifest();
   [data-viewmode="true"] .task-actions { display: none; }
 
   .btn {
-    width: 32px; height: 32px; border-radius: 6px;
-    background: transparent; border: 1px solid var(--border);
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 0.5px solid var(--glass-border);
     color: var(--text2); cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: all 0.15s; font-size: 15px; font-weight: 700; font-family: var(--font); flex-shrink: 0;
   }
   .btn svg { width: 16px; height: 16px; pointer-events: none; flex-shrink: 0; }
-  .btn:hover { border-color: var(--border2); color: var(--text); background: var(--bg3); }
-  .btn.del:hover { border-color: var(--danger); color: var(--danger); background: rgba(192,84,74,0.1); }
+  .btn:hover { background: var(--glass-bg-hover); border-color: var(--glass-border); color: var(--text); }
+  .btn.del:hover { border-color: var(--danger); color: var(--danger); background: rgba(192,84,74,0.15); }
   .btn:active { transform: scale(0.91); }
 
   /* EMPTY */
@@ -604,27 +645,39 @@ registerManifest();
   .fab {
     position: absolute; bottom: 26px; right: 20px;
     width: 54px; height: 54px; border-radius: 50%;
-    background: var(--text); color: var(--bg); border: none;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    color: var(--text); border: none;
     font-size: 26px; cursor: pointer;
     display: flex; align-items: center; justify-content: center;
     transition: transform 0.15s, box-shadow 0.15s;
-    z-index: 50; box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+    z-index: 50;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.2);
     font-family: var(--font); font-weight: 300; line-height: 1;
+    /* Override color with solid for visibility */
+    background: rgba(255,255,255,0.18);
   }
-  .fab:hover { transform: scale(1.07); }
+  .fab:hover { transform: scale(1.07); box-shadow: 0 6px 28px rgba(0,0,0,0.35); }
   .fab:active { transform: scale(0.93); }
   [data-viewmode="true"] .fab { display: none; }
 
   /* MODALS */
   .modal-backdrop {
-    position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+    position: fixed; inset: 0; background: rgba(0,0,0,0.5);
+    backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
     z-index: 100; display: none; align-items: flex-end; justify-content: center;
   }
   .modal-backdrop.open { display: flex; }
   .modal {
-    background: var(--bg2); border: 0.5px solid var(--border2);
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 0.5px solid var(--glass-border);
     border-radius: 22px 22px 0 0; width: 100%; max-width: 680px;
     padding: 24px 24px 42px; animation: slideUp 0.22s ease;
+    box-shadow: 0 -8px 40px rgba(0,0,0,0.3);
   }
   @keyframes slideUp { from { transform: translateY(100%); } to { transform: translateY(0); } }
   .modal-handle { width: 38px; height: 4px; background: var(--border2); border-radius: 2px; margin: 0 auto 22px; }
@@ -636,8 +689,9 @@ registerManifest();
   /* SHARE */
   .share-url-box {
     display: flex; gap: 8px; align-items: center;
-    background: var(--bg3); border: 0.5px solid var(--border);
-    border-radius: var(--radius); padding: 11px 14px; margin-bottom: 14px;
+    background: var(--glass-bg); border: 0.5px solid var(--glass-border);
+    border-radius: 12px; padding: 11px 14px; margin-bottom: 14px;
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
   }
   .share-url { flex: 1; font-size: 13px; font-family: var(--font); color: var(--text2); word-break: break-all; line-height: 1.5; }
   .share-copy-btn {
@@ -652,8 +706,9 @@ registerManifest();
   /* DRIVE MODAL */
   .drive-account-info {
     display: flex; align-items: center; gap: 13px;
-    padding: 13px 15px; background: var(--bg3);
-    border: 0.5px solid var(--border); border-radius: var(--radius); margin-bottom: 14px;
+    padding: 13px 15px; background: var(--glass-bg);
+    border: 0.5px solid var(--glass-border); border-radius: 12px; margin-bottom: 14px;
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
   }
   .drive-avatar {
     width: 40px; height: 40px; border-radius: 50%;
@@ -665,24 +720,26 @@ registerManifest();
   .drive-action-row { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .drive-action-btn {
     flex: 1; min-width: 120px; padding: 11px 14px;
-    background: var(--bg3); border: 0.5px solid var(--border);
-    border-radius: var(--radius); font-size: 14px; font-family: var(--font); font-weight: 500;
+    background: var(--glass-bg); border: 0.5px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 12px; font-size: 14px; font-family: var(--font); font-weight: 500;
     color: var(--text2); cursor: pointer; transition: all 0.15s; text-align: center;
   }
-  .drive-action-btn:hover { border-color: var(--border2); color: var(--text); }
-  .drive-action-btn.primary { background: var(--text); color: var(--bg); border-color: transparent; font-weight: 600; }
-  .drive-action-btn.primary:hover { opacity: 0.88; }
+  .drive-action-btn:hover { background: var(--glass-bg-hover); color: var(--text); }
+  .drive-action-btn.primary { background: rgba(255,255,255,0.22); color: var(--text); border-color: var(--glass-border); font-weight: 600; }
+  .drive-action-btn.primary:hover { background: rgba(255,255,255,0.32); }
   .drive-action-btn.danger:hover { border-color: var(--danger); color: var(--danger); }
   .drive-info-text { font-size: 14px; color: var(--text3); font-family: var(--font); line-height: 1.8; }
 
   .modal-close {
     display: flex; align-items: center; justify-content: center;
     margin-top: 18px; padding: 13px;
-    border: 0.5px solid var(--border); border-radius: var(--radius);
+    border: 0.5px solid var(--glass-border); border-radius: 14px;
     font-family: var(--font); font-size: 16px; font-weight: 500; color: var(--text2);
-    cursor: pointer; background: transparent; width: 100%; transition: all 0.15s;
+    cursor: pointer; background: var(--glass-bg); width: 100%; transition: all 0.15s;
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
   }
-  .modal-close:hover { border-color: var(--border2); color: var(--text); }
+  .modal-close:hover { background: var(--glass-bg-hover); color: var(--text); }
 
   /* TOAST */
   .toast {
@@ -699,6 +756,19 @@ registerManifest();
 </head>
 <body>
 
+<svg id="orb-scene" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+<defs>
+  <filter id="gbf"><feGaussianBlur stdDeviation="3.5"/></filter>
+  <filter id="tint_blue"><feColorMatrix type="matrix" values="0.7 0 0 0 0.18 0 0.85 0 0 0.35 0 0 1.1 0 0.55 0 0 0 1 0"/></filter>
+  <filter id="tint_rose"><feColorMatrix type="matrix" values="1.15 0 0 0 0.35 0 0.75 0 0 0.20 0 0 0.9 0 0.30 0 0 0 1 0"/></filter>
+  <filter id="tint_lavender"><feColorMatrix type="matrix" values="0.85 0 0 0 0.30 0 0.78 0 0 0.25 0 0 1.15 0 0.55 0 0 0 1 0"/></filter>
+  <filter id="tint_mint"><feColorMatrix type="matrix" values="0.75 0 0 0 0.15 0 1.1 0 0 0.42 0 0 0.9 0 0.35 0 0 0 1 0"/></filter>
+  <filter id="tint_peach"><feColorMatrix type="matrix" values="1.15 0 0 0 0.40 0 0.85 0 0 0.28 0 0 0.75 0 0.20 0 0 0 1 0"/></filter>
+  <filter id="tint_sky"><feColorMatrix type="matrix" values="0.65 0 0 0 0.10 0 0.92 0 0 0.42 0 0 1.2 0 0.65 0 0 0 1 0"/></filter>
+  <filter id="tint_lilac"><feColorMatrix type="matrix" values="0.95 0 0 0 0.38 0 0.72 0 0 0.22 0 0 1.1 0 0.50 0 0 0 1 0"/></filter>
+</defs>
+</svg>
+
 <div class="app" id="app">
   <div class="header">
     <div class="header-left">
@@ -710,6 +780,14 @@ registerManifest();
       <div class="header-title" data-i18n="appTitle">Task Manager</div>
     </div>
     <div class="header-right">
+      <button class="theme-btn" id="header-theme-btn" onclick="toggleTheme()" title="Toggle Theme">
+        <svg id="header-sun-icon" viewBox="0 0 16 16" fill="currentColor" style="display:none">
+          <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
+        </svg>
+        <svg id="header-moon-icon" viewBox="0 0 16 16" fill="currentColor">
+          <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
+        </svg>
+      </button>
       <button class="dots-btn" id="dots-btn" onclick="toggleMenu()" title="Menu">
         <svg viewBox="0 0 16 16" fill="currentColor">
           <circle cx="8" cy="3" r="1.4"/>
@@ -721,20 +799,6 @@ registerManifest();
 
   <!-- DROPDOWN MENU -->
   <div class="dropdown" id="dropdown-menu">
-    <!-- Theme -->
-    <button class="menu-item" onclick="toggleTheme();closeMenu()">
-      <div class="menu-icon">
-        <svg id="theme-icon-moon" viewBox="0 0 16 16" fill="currentColor">
-          <path d="M6 .278a.768.768 0 0 1 .08.858 7.208 7.208 0 0 0-.878 3.46c0 4.021 3.278 7.277 7.318 7.277.527 0 1.04-.055 1.533-.16a.787.787 0 0 1 .81.316.733.733 0 0 1-.031.893A8.349 8.349 0 0 1 8.344 16C3.734 16 0 12.286 0 7.71 0 4.266 2.114 1.312 5.124.06A.752.752 0 0 1 6 .278z"/>
-        </svg>
-        <svg id="theme-icon-sun" viewBox="0 0 16 16" fill="currentColor" style="display:none">
-          <path d="M8 11a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm0 1a4 4 0 1 0 0-8 4 4 0 0 0 0 8zM8 0a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 0zm0 13a.5.5 0 0 1 .5.5v2a.5.5 0 0 1-1 0v-2A.5.5 0 0 1 8 13zm8-5a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2a.5.5 0 0 1 .5.5zM3 8a.5.5 0 0 1-.5.5h-2a.5.5 0 0 1 0-1h2A.5.5 0 0 1 3 8zm10.657-5.657a.5.5 0 0 1 0 .707l-1.414 1.415a.5.5 0 1 1-.707-.708l1.414-1.414a.5.5 0 0 1 .707 0zm-9.193 9.193a.5.5 0 0 1 0 .707L3.05 13.657a.5.5 0 0 1-.707-.707l1.414-1.414a.5.5 0 0 1 .707 0zm9.193 2.121a.5.5 0 0 1-.707 0l-1.414-1.414a.5.5 0 0 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .707zM4.464 4.465a.5.5 0 0 1-.707 0L2.343 3.05a.5.5 0 1 1 .707-.707l1.414 1.414a.5.5 0 0 1 0 .708z"/>
-        </svg>
-      </div>
-      <div class="menu-item-label">
-        <span id="theme-menu-label" data-i18n="themeDark">Dark Theme</span>
-      </div>
-    </button>
     <!-- Language -->
     <button class="menu-item" onclick="toggleLang();closeMenu()">
       <div class="menu-icon">
@@ -1342,11 +1406,21 @@ function initTheme() {
 
 function applyTheme(theme) {
   document.documentElement.dataset.theme = theme;
-  document.getElementById('theme-color-meta').content = theme === 'dark' ? '#111111' : '#f2f2f7';
+  document.body.dataset.theme = theme;
+  document.getElementById('theme-color-meta').content = theme === 'dark' ? '#1a1e2e' : '#b8c2ce';
+
+  // Header button icons
+  const headerMoon = document.getElementById('header-moon-icon');
+  const headerSun  = document.getElementById('header-sun-icon');
+  if (headerMoon) headerMoon.style.display = theme === 'dark' ? 'block' : 'none';
+  if (headerSun)  headerSun.style.display  = theme === 'light' ? 'block' : 'none';
+
+  // Legacy menu icons (kept for compat even though menu item removed)
   const moonEl = document.getElementById('theme-icon-moon');
-  const sunEl = document.getElementById('theme-icon-sun');
+  const sunEl  = document.getElementById('theme-icon-sun');
   if (moonEl) moonEl.style.display = theme === 'dark' ? 'block' : 'none';
-  if (sunEl) sunEl.style.display = theme === 'light' ? 'block' : 'none';
+  if (sunEl)  sunEl.style.display  = theme === 'light' ? 'block' : 'none';
+
   localStorage.setItem(THEME_KEY, theme);
   updateThemeMenuLabel();
 }
@@ -2018,6 +2092,123 @@ function toast(msg) {
   clearTimeout(toastTimer);
   toastTimer = setTimeout(() => el.classList.remove('show'), 2500);
 }
+
+// ─── Animated Glass Orbs ─────────────────────────────────────────────────────
+(function() {
+  const svgNS = 'http://www.w3.org/2000/svg';
+  const scene = document.getElementById('orb-scene');
+  const sceneDefs = scene.querySelector('defs');
+  const TINTS = ['tint_blue','tint_rose','tint_lavender','tint_mint','tint_peach','tint_sky','tint_lilac'];
+  const COUNT = window.innerWidth <= 600 ? 12 : 22;
+  const W = () => window.innerWidth;
+  const H = () => window.innerHeight;
+  const rand = (a,b) => a + Math.random()*(b-a);
+
+  function createOrbDef(id) {
+    const sym = document.createElementNS(svgNS,'symbol');
+    sym.setAttribute('id',id); sym.setAttribute('viewBox','14.36 0 1000 1000');
+    const base = document.createElementNS(svgNS,'circle');
+    base.setAttribute('cx','514.36'); base.setAttribute('cy','500'); base.setAttribute('r','500');
+    base.setAttribute('fill','rgba(0,0,51,0.05)'); sym.appendChild(base);
+    function mkLG(lid,x1,y1,x2,y2,gt) {
+      const lg = document.createElementNS(svgNS,'linearGradient');
+      lg.setAttribute('id',lid); lg.setAttribute('x1',x1); lg.setAttribute('y1',y1);
+      lg.setAttribute('x2',x2); lg.setAttribute('y2',y2); lg.setAttribute('gradientUnits','userSpaceOnUse');
+      if(gt) lg.setAttribute('gradientTransform',gt);
+      [[0,'0'],[1,'1']].forEach(([o,op])=>{const s=document.createElementNS(svgNS,'stop');s.setAttribute('offset',o);s.setAttribute('stop-color','#fff');s.setAttribute('stop-opacity',op);lg.appendChild(s);});
+      sceneDefs.appendChild(lg);
+    }
+    mkLG(id+'_lg1','609.65','584.17','609.65','287.88','translate(1339.58 1038.1) rotate(-180)');
+    const g1=document.createElementNS(svgNS,'g'); g1.setAttribute('style','filter:url(#gbf);opacity:0.3;');
+    const p1=document.createElementNS(svgNS,'path');
+    p1.setAttribute('d','M718.02,461.04c30.42-2.37,60.84-4.74,91.26-7.11,7.04,27.97,15.65,78.04,3.56,138.23-16.73,83.26-63.18,136.71-84.05,158.07-29.27-8.69-58.54-17.38-87.81-26.07,18.6-21.44,46.89-59.61,64.59-114.37,20.73-64.13,16.71-119.38,12.44-148.74Z');
+    p1.setAttribute('fill','url(#'+id+'_lg1)'); g1.appendChild(p1); sym.appendChild(g1);
+    mkLG(id+'_lg2','268.66','542.22','268.66','245.93',null);
+    const g2=document.createElementNS(svgNS,'g'); g2.setAttribute('style','filter:url(#gbf);');
+    const p2=document.createElementNS(svgNS,'path');
+    p2.setAttribute('d','M280.58,535.11c-30.42,2.37-60.84,4.74-91.26,7.11-7.04-27.97-15.65-78.04-3.56-138.23,16.73-83.26,63.18-136.71,84.05-158.07,29.27,8.69,58.54,17.38,87.81,26.07-18.6,21.44-46.89,59.61-64.59,114.37-20.73,64.13-16.71,119.38-12.44,148.74Z');
+    p2.setAttribute('fill','url(#'+id+'_lg2)'); g2.appendChild(p2); sym.appendChild(g2);
+    function mkRG(rid,cx,cy,r,gt,stops) {
+      const rg=document.createElementNS(svgNS,'radialGradient');
+      rg.setAttribute('id',rid); rg.setAttribute('cx',cx); rg.setAttribute('cy',cy);
+      rg.setAttribute('r',r); rg.setAttribute('gradientUnits','userSpaceOnUse');
+      if(gt) rg.setAttribute('gradientTransform',gt);
+      stops.forEach(([o,op])=>{const s=document.createElementNS(svgNS,'stop');s.setAttribute('offset',o);s.setAttribute('stop-color','#fdfdfe');s.setAttribute('stop-opacity',op);rg.appendChild(s);});
+      sceneDefs.appendChild(rg);
+    }
+    mkRG(id+'_rg1','514.36','500','500',null,[[0,'0'],['.62','0'],['.72','0'],['.79','.02'],['.88','.07'],['.96','.15'],['1','.2']]);
+    const c2=document.createElementNS(svgNS,'circle'); c2.setAttribute('cx','514.36'); c2.setAttribute('cy','500'); c2.setAttribute('r','500'); c2.setAttribute('fill','url(#'+id+'_rg1)'); sym.appendChild(c2);
+    mkRG(id+'_rg2','971.63','362.89','354.29',null,[[0,'1'],['1','0']]);
+    const g3=document.createElementNS(svgNS,'g'); g3.setAttribute('style','filter:url(#gbf);');
+    const p3=document.createElementNS(svgNS,'path');
+    p3.setAttribute('d','M734.58,82.67c254.49,107.8,347.3,448.87,186.22,672.44,133.56-231.42,48.96-543.75-186.22-672.44Z');
+    p3.setAttribute('fill','url(#'+id+'_rg2)'); g3.appendChild(p3); sym.appendChild(g3);
+    mkRG(id+'_rg3','539.85','122.78','462.78','translate(607.86 725.95) rotate(-180)',[[0,'1'],['1','0']]);
+    const g4=document.createElementNS(svgNS,'g'); g4.setAttribute('style','filter:url(#gbf);opacity:0.5;');
+    const p4=document.createElementNS(svgNS,'path');
+    p4.setAttribute('d','M357.62,969.33C41.68,874.39-132.36,363.04,253.91,90.67-43.24,310.64,5.12,818.69,357.62,969.33Z');
+    p4.setAttribute('fill','url(#'+id+'_rg3)'); g4.appendChild(p4); sym.appendChild(g4);
+    sceneDefs.appendChild(sym);
+  }
+  createOrbDef('taskOrb');
+
+  let orbs = [];
+  function initOrbs() {
+    orbs = [];
+    for (let i = 0; i < COUNT; i++) {
+      const r = rand(18, 52);
+      let x, y, ok, tries = 0;
+      do {
+        ok = true; x = rand(r, W()-r); y = rand(r, H()-r);
+        for (const o of orbs) { const dx=x-o.x,dy=y-o.y; if(Math.sqrt(dx*dx+dy*dy)<r+o.r+6){ok=false;break;} }
+        tries++;
+      } while (!ok && tries < 400);
+      const spd = rand(0.12, 0.4), ang = rand(0, Math.PI*2);
+      orbs.push({x, y, r, vx: Math.cos(ang)*spd, vy: Math.sin(ang)*spd, tint: TINTS[Math.floor(rand(0,TINTS.length))], el: null});
+    }
+  }
+
+  function buildOrbs() {
+    orbs.forEach(o => {
+      const g = document.createElementNS(svgNS,'g');
+      g.setAttribute('style','filter:url(#'+o.tint+')');
+      const use = document.createElementNS(svgNS,'use');
+      use.setAttribute('href','#taskOrb'); use.setAttribute('width',o.r*2); use.setAttribute('height',o.r*2);
+      g.appendChild(use); scene.appendChild(g); o.el = use;
+    });
+  }
+
+  function resolveCollisions() {
+    for (let i = 0; i < orbs.length; i++) {
+      for (let j = i+1; j < orbs.length; j++) {
+        const a=orbs[i], b=orbs[j];
+        const dx=b.x-a.x, dy=b.y-a.y, dist=Math.sqrt(dx*dx+dy*dy)||0.001, minD=a.r+b.r;
+        if (dist < minD) {
+          const nx=dx/dist, ny=dy/dist, ov=(minD-dist)/2;
+          a.x-=nx*ov; a.y-=ny*ov; b.x+=nx*ov; b.y+=ny*ov;
+          const dvx=a.vx-b.vx, dvy=a.vy-b.vy, dot=dvx*nx+dvy*ny;
+          if(dot>0){a.vx-=dot*nx;a.vy-=dot*ny;b.vx+=dot*nx;b.vy+=dot*ny;}
+        }
+      }
+    }
+  }
+
+  function tick() {
+    const w=W(), h=H();
+    orbs.forEach(o => {
+      o.x+=o.vx; o.y+=o.vy;
+      if(o.x-o.r<0){o.x=o.r;o.vx=Math.abs(o.vx);}
+      if(o.x+o.r>w){o.x=w-o.r;o.vx=-Math.abs(o.vx);}
+      if(o.y-o.r<0){o.y=o.r;o.vy=Math.abs(o.vy);}
+      if(o.y+o.r>h){o.y=h-o.r;o.vy=-Math.abs(o.vy);}
+      o.el.setAttribute('x',o.x-o.r); o.el.setAttribute('y',o.y-o.r);
+    });
+    resolveCollisions();
+    requestAnimationFrame(tick);
+  }
+
+  initOrbs(); buildOrbs(); tick();
+})();
 
 document.addEventListener('DOMContentLoaded', init);
 </script>
