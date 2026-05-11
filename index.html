@@ -111,13 +111,13 @@ registerManifest();
     overflow: hidden;
     font-family: var(--font);
     font-size: var(--font-size);
-    background: #1a1e2e;
+    background: #0c0e15;
     color: var(--text);
     overscroll-behavior: none;
     transition: background 0.8s ease, color var(--transition);
   }
   body[data-theme="light"] { background: #b8c2ce; }
-  body[data-theme="dark"]  { background: #1a1e2e; }
+  body[data-theme="dark"]  { background: #0c0e15; }
 
 
   .app {
@@ -572,7 +572,7 @@ registerManifest();
     position: fixed;
     pointer-events: none;
     z-index: 9999;
-    border-radius: var(--radius);
+    border-radius: 14px;
     box-shadow: 0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2);
     opacity: 0.92;
     transform-origin: center center;
@@ -749,8 +749,9 @@ registerManifest();
 </head>
 <body>
 
+<canvas id="mb-canvas" style="position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:0;"></canvas>
 
-<div class="app" id="app">
+<div class="app" id="app" style="position:relative;z-index:1;">
   <div class="header">
     <div class="header-left">
       <svg class="header-icon" viewBox="0 0 512 512" xmlns="http://www.w3.org/2000/svg">
@@ -2034,6 +2035,80 @@ function toast(msg) {
 }
 
 document.addEventListener('DOMContentLoaded', init);
+</script>
+
+<script>
+// ─── Metaballs background ─────────────────────────────────────────────────────
+(function() {
+  const canvas = document.getElementById('mb-canvas');
+  const ctx = canvas.getContext('2d');
+
+  // Coverage ~30%: n = (W * H * 0.30) / (pi * r^2), r=60
+  const BLOB_R = 60;
+  const COVERAGE = 0.30;
+  const BLOB_AREA = Math.PI * BLOB_R * BLOB_R;
+
+  let blobs = [];
+  let W = 0, H = 0;
+
+  function blobCount(w, h) {
+    return Math.max(4, Math.round((w * h * COVERAGE) / BLOB_AREA));
+  }
+
+  function initBlobs(count) {
+    blobs = Array.from({ length: count }, () => ({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      r: 50 + Math.random() * 20,
+      vx: (Math.random() - 0.5) * 0.5,
+      vy: (Math.random() - 0.5) * 0.5,
+    }));
+  }
+
+  function resize() {
+    W = window.innerWidth;
+    H = window.innerHeight;
+    canvas.width  = W;
+    canvas.height = H;
+    initBlobs(blobCount(W, H));
+  }
+
+  function draw() {
+    const isDark = document.documentElement.dataset.theme !== 'light';
+    ctx.clearRect(0, 0, W, H);
+
+    if (isDark) {
+      canvas.style.filter = 'blur(16px) contrast(25)';
+      canvas.style.opacity = '0.045';
+      ctx.fillStyle = '#0c0e15';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#ffffff';
+    } else {
+      canvas.style.filter = 'blur(16px) contrast(25)';
+      canvas.style.opacity = '0.03';
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = '#000000';
+    }
+
+    for (const b of blobs) {
+      ctx.beginPath();
+      ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+      ctx.fill();
+      b.x += b.vx; b.y += b.vy;
+      if (b.x < -b.r) b.x = W + b.r;
+      else if (b.x > W + b.r) b.x = -b.r;
+      if (b.y < -b.r) b.y = H + b.r;
+      else if (b.y > H + b.r) b.y = -b.r;
+    }
+
+    requestAnimationFrame(draw);
+  }
+
+  resize();
+  window.addEventListener('resize', resize);
+  draw();
+})();
 </script>
 </body>
 </html>
