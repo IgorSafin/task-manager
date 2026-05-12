@@ -201,9 +201,9 @@ registerManifest();
     position: absolute;
     top: calc(var(--header-h) - 6px);
     right: 12px;
-    background: var(--glass-bg);
-    backdrop-filter: var(--glass-blur);
-    -webkit-backdrop-filter: var(--glass-blur);
+    background: rgba(30,30,34,0.82);
+    backdrop-filter: blur(28px) saturate(1.4);
+    -webkit-backdrop-filter: blur(28px) saturate(1.4);
     border: 0.5px solid var(--glass-border);
     border-radius: 16px;
     padding: 8px;
@@ -214,6 +214,9 @@ registerManifest();
     flex-direction: column;
     gap: 2px;
     animation: dropIn 0.15s ease;
+  }
+  [data-theme="light"] .dropdown {
+    background: rgba(240,240,245,0.88);
   }
   @keyframes dropIn {
     from { opacity: 0; transform: translateY(-8px) scale(0.97); }
@@ -557,6 +560,13 @@ registerManifest();
     from { opacity: 0; transform: translateY(-10px) scale(0.98); }
     to { opacity: 1; transform: translateY(0) scale(1); }
   }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to   { opacity: 1; }
+  }
+  .task-card-new {
+    animation: fadeIn 0.45s ease both !important;
+  }
   .task-card:active { transform: scale(0.99); }
   .task-card.dragging {
     opacity: 0.28;
@@ -738,12 +748,13 @@ registerManifest();
   .toast {
     position: fixed; bottom: 96px; left: 50%;
     transform: translateX(-50%) translateY(20px);
-    background: var(--text); color: var(--bg);
+    background: #f2f2f7; color: #1c1c1e;
     font-family: var(--font); font-size: 14px; font-weight: 500;
     padding: 9px 18px; border-radius: 22px;
     opacity: 0; transition: all 0.25s; z-index: 200;
     white-space: nowrap; pointer-events: none;
   }
+  [data-theme="light"] .toast { background: #1c1c1e; color: #f2f2f7; }
   .toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 </style>
 </head>
@@ -1835,7 +1846,7 @@ function switchTab(tab) {
   document.querySelectorAll('.tab').forEach(el => el.classList.toggle('active', el.dataset.tab === tab));
 }
 
-function render() {
+function render(newTaskId) {
   SECTIONS.forEach(sec => {
     const tasks = state.tasks.filter(tt => tt.section === sec);
     const list = document.getElementById('list-'+sec);
@@ -1843,15 +1854,15 @@ function render() {
     const count = document.getElementById('count-'+sec);
     if (!list || !empty || !count) return;
     list.innerHTML = '';
-    tasks.forEach(tt => list.appendChild(buildCard(tt)));
+    tasks.forEach(tt => list.appendChild(buildCard(tt, newTaskId)));
     empty.style.display = tasks.length === 0 ? 'flex' : 'none';
     count.textContent = tasks.length;
   });
 }
 
-function buildCard(task) {
+function buildCard(task, newTaskId) {
   const card = document.createElement('div');
-  card.className = 'task-card';
+  card.className = task.id === newTaskId ? 'task-card task-card-new' : 'task-card';
   card.dataset.id = task.id;
 
   const stripe = document.createElement('div');
@@ -1964,7 +1975,7 @@ function del(id) {
 function addTask() {
   const task = { id: state.nextId++, name: t('newTask'), section: 'current', date: null };
   state.tasks.push(task);
-  save(); switchTab('current'); render();
+  save(); switchTab('current'); render(task.id);
   setTimeout(() => {
     const el = document.querySelector(`[data-id="${task.id}"] .task-name`);
     if (el) {
